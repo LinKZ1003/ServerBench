@@ -1,82 +1,97 @@
-# 🌐 auto33MIMO — Ubuntu 服务器网络质量自动化测试脚本
+# 🔥 autoOCMIMO — Ubuntu 服务器压力测试 & 网络质量一体化脚本
 
-一键检测服务器网络质量，覆盖 5 大维度，自动对比行业标准并生成报告。
+一站式服务器稳定性验证工具：CPU/GPU 压力测试 + 实时监控 + 专业网络质量检测，压测期间全程监控网络状态，自动生成综合报告。
 
-## ✨ 测试维度
+## ✨ 功能特性
 
-| 测试项 | 工具 | 检测内容 | 行业标准 |
-|--------|------|----------|----------|
-| 基础连通性 | `ping` | 丢包率、延迟 | 丢包 < 1%，延迟 < 50ms |
-| 路径健康 | `mtr` | 路由追踪、节点丢包 | 最终节点丢包 = 0%，无环回 |
-| TCP 响应 | `tcping` | TCP 连接时间 | 连接时间 < 100ms |
-| 带宽质量 | `iperf3` | 抖动、重传率 | 抖动 < 5ms，重传 < 5% |
-| 业务可用性 | `curl` | HTTP 状态码、TTFB | 2xx/3xx，TTFB < 500ms |
+### 🖥️ 压力测试
+- **CPU 压测**：stress-ng 全核满载 + 内存压力
+- **GPU 压测**：gpu_burn CUDA 烧机测试（需 NVIDIA 显卡）
+- **可配置时长**：自由控制压测时间
+
+### 📊 实时监控
+- **系统资源采集**：CPU 占用、内存使用、GPU 状态
+- **GUI 监控窗口**：自动打开 htop / nvidia-smi / ping 监控终端
+- **命令行模式**：纯终端实时刷新，无需桌面环境
+
+### 🌐 网络测试套件
+- **Ping**：丢包率、延迟统计
+- **MTR**：路由追踪、逐跳丢包分析
+- **TCPing**：TCP 连接响应时间
+- **iperf3**：带宽、抖动、重传率
+- **DNS**：DNS 解析速度测试
+- **HTTP**：状态码、TTFB、各阶段耗时
+- **持续 Ping 监控**：压测全程后台运行，记录网络波动
+- **周期性网络测试**：压测期间定时全量网络检测
+
+### 🛠️ 自动化
+- **依赖自动安装**：stress-ng、gpu_burn、NVIDIA 驱动
+- **硬件信息采集**：CPU、内存、磁盘、GPU、系统版本自动识别
+- **报告生成**：文本报告 + JSON 报告，自动保存到桌面
 
 ## 📋 环境要求
 
-- **系统**：Ubuntu / Debian（其他 Linux 发行版需手动安装依赖）
+- **系统**：Ubuntu 20.04+ / Debian 11+
 - **Python**：3.8+
-- **依赖工具**：自动检测并安装（`ping`, `mtr`, `tcping`, `iperf3`, `curl`）
-- **权限**：部分测试需要 `sudo`（安装依赖）
+- **权限**：`sudo`（安装依赖、运行压测）
+- **GPU 测试**：NVIDIA 显卡 + CUDA 驱动（可选，无 GPU 自动跳过）
+- **可选依赖**：`psutil`（更精确的系统监控，没有也能跑）
 
 ## 🚀 快速开始
 
-### 克隆并运行
+### 一键全装 + 全测
 
 ```bash
-git clone https://github.com/LinKZ1003/auto33MIMO.git
-cd auto33MIMO
-python3 auto33MIMO.py --all
+git clone https://github.com/LinKZ1003/your-repo.git
+cd your-repo
+sudo python3 autoOCMIMO.py --all
 ```
 
-### 先装依赖再跑
+### 交互模式（推荐新手）
 
 ```bash
-python3 auto33MIMO.py --install   # 安装所有依赖
-python3 auto33MIMO.py --all       # 运行全部测试
+sudo python3 autoOCMIMO.py
+```
+
+按提示选择要测试的项目和参数。
+
+### 仅安装依赖
+
+```bash
+sudo python3 autoOCMIMO.py --install
+```
+
+### 仅运行网络测试（不压测）
+
+```bash
+sudo python3 autoOCMIMO.py --no-cpu --no-gpu --duration 30
 ```
 
 ## 💻 使用方式
 
-### 交互模式（无参数）
+### CLI 模式
 
 ```bash
-python3 auto33MIMO.py
-```
+# 全部测试，压测 120 秒
+sudo python3 autoOCMIMO.py --all --duration 120
 
-按提示逐项选择测试内容和参数。
+# 只压 CPU
+sudo python3 autoOCMIMO.py --cpu --no-gpu --duration 60
 
-### CLI 模式（指定参数）
+# 只压 GPU
+sudo python3 autoOCMIMO.py --gpu --no-cpu --duration 60
 
-```bash
-# 全部测试
-python3 auto33MIMO.py --all
+# 纯网络测试（不压硬件）
+sudo python3 autoOCMIMO.py --no-cpu --no-gpu
 
-# 单项测试
-python3 auto33MIMO.py --ping
-python3 auto33MIMO.py --ping --ping-target 8.8.8.8 --ping-count 50
-python3 auto33MIMO.py --mtr --mtr-target baidu.com
-python3 auto33MIMO.py --tcping --tcping-target example.com --tcping-port 80
-python3 auto33MIMO.py --curl --curl-url https://www.qq.com
+# 指定 iperf3 服务器
+sudo python3 autoOCMIMO.py --all --iperf3-server 192.168.1.100
 
-# 组合测试
-python3 auto33MIMO.py --ping --mtr --tcping --curl
+# 输出 JSON 报告
+sudo python3 autoOCMIMO.py --all --json-output /tmp/report.json
 
-# 带 iperf3 带宽测试（需要先启动 iperf3 服务端）
-python3 auto33MIMO.py --iperf3 --iperf3-server 192.168.1.100
-```
-
-### 高级选项
-
-```bash
-# 并行执行（非 iperf3 测试并行跑，节省时间）
-python3 auto33MIMO.py --all --parallel
-
-# JSON 格式报告（方便对接监控系统）
-python3 auto33MIMO.py --all --json
-
-# 指定报告输出路径
-python3 auto33MIMO.py --all --report /tmp/net_report.txt
+# 命令行监控模式（不压测，只看状态）
+sudo python3 autoOCMIMO.py --monitor
 ```
 
 ## 📋 命令行参数
@@ -84,61 +99,76 @@ python3 auto33MIMO.py --all --report /tmp/net_report.txt
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
 | `--all` | 运行所有测试 | - |
-| `--parallel` | 并行执行 | false |
-| `--json` | 输出 JSON 报告 | false |
-| `--report PATH` | 报告输出路径 | `~/Desktop/网络测试报告_时间.txt` |
-| `--install` | 仅安装依赖 | - |
-| `--ping` | 运行 ping 测试 | - |
-| `--ping-target` | ping 目标地址 | `bilibili.com` |
-| `--ping-count` | ping 包数 | `100` |
-| `--ping-size` | ping 包大小(bytes) | `1400` |
-| `--mtr` | 运行 MTR 测试 | - |
-| `--mtr-target` | MTR 目标地址 | `bilibili.com` |
-| `--tcping` | 运行 TCPing 测试 | - |
-| `--tcping-target` | TCPing 目标 | `bilibili.com` |
-| `--tcping-port` | TCPing 端口 | `443` |
-| `--iperf3` | 运行 iperf3 测试 | - |
-| `--iperf3-server` | iperf3 服务端地址 | 必填 |
-| `--iperf3-port` | iperf3 端口 | `5201` |
-| `--iperf3-duration` | iperf3 测试时长(s) | `10` |
-| `--curl` | 运行 curl 测试 | - |
-| `--curl-url` | curl 测试 URL | `https://www.baidu.com` |
+| `--install` | 安装所有依赖 | - |
+| `--monitor` | 纯命令行监控模式 | - |
+| `--cpu` | 运行 CPU 压测 | - |
+| `--no-cpu` | 跳过 CPU 压测 | - |
+| `--gpu` | 运行 GPU 压测 | - |
+| `--no-gpu` | 跳过 GPU 压测 | - |
+| `--duration N` | 压测时长（秒） | `60` |
+| `--iperf3-server` | iperf3 服务端地址 | - |
+| `--iperf3-duration` | iperf3 测试时长（秒） | `10` |
+| `--json-output` | JSON 报告输出路径 | - |
 
 ## 📊 报告示例
 
 ```
-======================================================================
- 测试报告
-======================================================================
+============================================================
+ 压力测试报告
+============================================================
 
-[PING] bilibili.com
-  状态：✅ PASS
-  标准：丢包率 < 1.0%, 平均延迟 < 50.0ms
-  丢包率：0%
-  平均延迟：12.35ms
+📋 测试环境信息
+  测试时间:      2026-04-16 14:30:00
+  系统:          Ubuntu 22.04.3 LTS
+  内核:          5.15.0-91-generic
+  CPU:           Intel(R) Xeon(R) E5-2680 v4 @ 2.40GHz (28 核)
+  内存:          64 GB
+  GPU:           NVIDIA GeForce RTX 3090 (24 GB)
 
-[MTR] bilibili.com
-  状态：✅ PASS
-  标准：最终节点丢包率 = 0.0%, 无路由环回
+🖥️ CPU 压力测试
+  测试工具:      stress-ng
+  测试时长:      60s
+  最高温度:      78°C
+  平均负载:      27.5
 
-[CURL] https://www.baidu.com
-  状态：✅ PASS
-  标准：HTTP Status 2xx/3xx, TTFB < 500ms
-  HTTP 状态码：200
-  TTFB: 58ms
-  DNS 解析：2.15ms
-  TCP 连接：5.30ms
+🎮 GPU 压力测试
+  测试工具:      gpu_burn
+  测试时长:      60s
+  最高温度:      83°C
+  最高功耗:      350W
 
-======================================================================
- 总结
-======================================================================
-总测试数：5
-✅ 通过：5
-❌ 失败：0
-通过率：100.0%
+🌐 网络测试报告
+  📡 Ping → 8.8.8.8
+    丢包率: 0%
+    平均延迟: 35.2ms ✅
 
-总体评估：✅ 所有测试通过
+  📡 持续 Ping 监控（全程）
+    运行时长: 62s
+    总包数: 12 | 丢包: 0 | 丢包率: 0.0% ✅
+
+  🌐 HTTP → https://www.baidu.com
+    HTTP 200 ✅
+    TTFB: 45ms ✅
+
+✅ 所有测试通过
 ```
+
+## 🏗️ 项目结构
+
+```
+autoOCMIMO.py          # 主脚本（全部功能）
+README.md              # 本文件
+LICENSE                # MIT 开源协议
+.gitignore             # Git 忽略规则
+```
+
+## ⚠️ 注意事项
+
+- CPU/GPU 压测会产生**高负载**，生产环境慎用
+- GPU 测试需要 **NVIDIA 显卡 + 驱动**，无 GPU 会自动跳过
+- iperf3 测试需要**对端有 iperf3 服务端**运行
+- 建议在**测试环境**或**新购服务器验货**时使用
+- 报告默认保存到 `~/Desktop/`
 
 ## 🤝 贡献
 
